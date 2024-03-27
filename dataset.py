@@ -39,7 +39,7 @@ class PlantDataset(Dataset):
         }
     
     def prepare_dataset(self):
-        ## root는 "./dataset", split은 "./test", "./train"으로 지정.
+        ## root는 "./dataset", split은 "test", "train"으로 지정.
         split_base = os.path.join(self.root, self.split)
         ## 이미지 이름 순으로 정렬한 리스트
         images = sorted(os.listdir(os.path.join(split_base, "image")))
@@ -47,9 +47,10 @@ class PlantDataset(Dataset):
         csv = pd.read_csv(os.path.join(split_base, "info.csv"))
         ## 이미지 이름과 순서 맞추기 위해 id 순으로 정렬
         csv = csv.sort_values(by="id")
+        ## 타겟 값에 대한 표준편차 열 제거.
+        csv.drop(columns=["X4_sd","X11_sd","X18_sd","X26_sd","X50_sd","X3112_sd"], inplace=True)
         ## csv 데이터프레임에서 정보와 라벨 분리.
-        label_col = ["X4_mean","X11_mean","X18_mean","X26_mean","X50_mean",
-                     "X3112_mean","X4_sd","X11_sd","X18_sd","X26_sd","X50_sd","X3112_sd"]
+        label_col = ["X4_mean","X11_mean","X18_mean","X26_mean","X50_mean","X3112_mean"]
         info_col = [column for column in csv.columns if column not in label_col]
         ## 데이터 저장할 빈 리스트 생성.
         data = []
