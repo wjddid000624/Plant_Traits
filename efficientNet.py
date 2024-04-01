@@ -32,7 +32,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # %%
 # specify path to data
-path2data = 'C:/Users/shgla/OneDrive/ybigta/plant_project/efficientNet_data'
+path2data = './efficientNet_data'
 
 # if not exists the path, make the directory
 if not os.path.exists(path2data):
