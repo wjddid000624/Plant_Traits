@@ -28,7 +28,8 @@ class PlantDataset(Dataset):
         image = Image.open(self.data[index][0])
         if self.transforms:
             image = self.transforms(image)
-        image = self.totensor(image)
+        else:
+            image = self.totensor(image)
         ## 식물에 대한 지리적 정보
         info = self.data[index][1]
         ## 식물 특성값

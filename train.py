@@ -30,7 +30,18 @@ if __name__ == '__main__':
     os.makedirs('./save', exist_ok=True)
     os.makedirs(f'./save/{args.model}_{args.epoch}_{args.batch}_{args.learning_rate}', exist_ok=True)
     
-    transforms = T.Compose([...])
+    img_size = 256
+    crop_size = 224
+    max_rotation = 30
+    transforms = T.Compose(
+        [T.Resize(img_size),
+         T.RandomHorizontalFlip(),
+         T.RandomRotation(max_rotation),
+         T.RandomResizedCrop(crop_size, scale=(0.5, 1.0)),
+         T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
+         T.ToTensor(),
+         T.RandomErasing(),
+         ])
 
     dataset = PlantDataset("./dataset", "train/", transforms=transforms)
     num_train = len(dataset)
