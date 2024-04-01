@@ -1,0 +1,7 @@
+trait_ID	trait_name 
+X4	Stem specific density (SSD) or wood density (stem dry mass per stem fresh volume) 
+X11	Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA) 
+X18	Plant height 
+X26	Seed dry mass 
+X50	Leaf nitrogen (N) content per leaf area 
+X3112	Leaf area (in case of compound leaves: leaf, undefined if petiole in- or excluded) 
