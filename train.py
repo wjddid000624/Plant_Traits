@@ -32,7 +32,7 @@ if __name__ == '__main__':
     
     transforms = T.Compose([...])
 
-    dataset = PlantDataset("./dataset", "train", transforms=transforms)
+    dataset = PlantDataset("./dataset", "train/", transforms=transforms)
     num_train = len(dataset)
     indices = list(range(num_train))
     split = int(num_train * 0.8)
@@ -58,18 +58,18 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
     
-    if args.model == '1':
+    if args.model == 1:
         model = Model1()
-    elif args.model == '2':
+    elif args.model == 2:
         model = Model2()
-    elif args.model == '3': 
+    elif args.model == 3: 
         model = Model3()
     else:
         raise ValueError("model not supported")
     model.to(device)
 
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.learning_rate)
-    criterion = None
+    criterion = nn.MSELoss()
 
     for epoch in range(args.epoch):
         

@@ -16,6 +16,7 @@ class PlantDataset(Dataset):
     ):
         self.root = root
         self.transforms = transforms
+        self.split = split
         self.totensor = T.ToTensor()
         self.data = self.prepare_dataset()
     
@@ -42,7 +43,8 @@ class PlantDataset(Dataset):
         ## root는 "./dataset", split은 "test", "train"으로 지정.
         split_base = os.path.join(self.root, self.split)
         ## 이미지 이름 순으로 정렬한 리스트
-        images = sorted(os.listdir(os.path.join(split_base, "image")))
+        image_path = os.path.join(split_base, "image")
+        images = sorted(os.listdir(image_path))
         ## csv 파일에서 훈련에 사용할 정보와 타겟값들 불러오기
         csv = pd.read_csv(os.path.join(split_base, "info.csv"))
         ## 이미지 이름과 순서 맞추기 위해 id 순으로 정렬
@@ -56,7 +58,7 @@ class PlantDataset(Dataset):
         data = []
         ## [이미지 경로, 정보, 라벨]
         for idx, image_name in enumerate(images):
-            data.append([os.path.join(split_base, image_name),
+            data.append([os.path.join(image_path, image_name),
                          list(csv[info_col].iloc[idx]),
                          list(csv[label_col].iloc[idx])])
         return data
