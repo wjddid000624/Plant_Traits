@@ -90,8 +90,10 @@ if __name__ == '__main__':
 
         for batch, tensor in enumerate(tqdm(train_loader)):
             images = tensor['image'].to(device)
-            infos = tensor['info'].to(device)
-            labels = tensor['label'].to(device)
+            infos = torch.stack(tensor['info'], dim = 1)
+            infos = infos.to(device).float()
+            labels = torch.stack(tensor['label'], dim = 1)
+            labels = labels.to(device).float()
             
             pred = model(images, infos)
             loss = criterion(pred, labels)
@@ -111,8 +113,10 @@ if __name__ == '__main__':
         with torch.no_grad():
             for batch, tensor in enumerate(tqdm(val_loader)):
                 images = tensor['image'].to(device)
-                infos = tensor['info'].to(device)
-                labels = tensor['label'].to(device)
+                infos = torch.stack(tensor['info'], dim = 1)
+                infos = infos.to(device).float()
+                labels = torch.stack(tensor['label'], dim = 1)
+                labels = labels.to(device).float()
                 total += len(images)
 
                 outputs = model(images, infos)
