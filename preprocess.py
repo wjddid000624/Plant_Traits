@@ -260,6 +260,7 @@ class NumericPreprocessor():
             print("Processing ID...")
             self.train_data = self.Standardize(self.train_data)
             print("Standardizing...")
+            return {"image" : self.image, "data" : self.train_data, "label" : self.label}
 
         else:
             self.test_data = self.TARGET_processor(self.test_data)
@@ -276,5 +277,4 @@ class NumericPreprocessor():
             print("Processing ID...")
             self.test_data = self.Standardize(self.test_data)
             print("Standardizing...")
-            
-        return {"image" : self.image, "data" : self.train_data, "label" : self.label}
+            return {"image" : self.image, "data" : self.test_data, "label" : self.label}
