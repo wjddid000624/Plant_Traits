@@ -2,6 +2,7 @@ import os
 import argparse
 import numpy as np
 from tqdm import tqdm
+import logging
 
 import torch
 import torch.nn as nn
@@ -43,7 +44,7 @@ if __name__ == '__main__':
          T.RandomErasing(),
          ])
 
-    dataset = PlantDataset("./dataset", "train/", transforms=transforms)
+    dataset = PlantDataset("./dataset", "train", transforms=transforms)
     num_train = len(dataset)
     indices = list(range(num_train))
     split = int(num_train * 0.8)
@@ -90,12 +91,10 @@ if __name__ == '__main__':
 
         for batch, tensor in enumerate(tqdm(train_loader)):
             images = tensor['image'].to(device)
-            infos = torch.stack(tensor['info'], dim = 1)
-            infos = infos.to(device).float()
-            labels = torch.stack(tensor['label'], dim = 1)
-            labels = labels.to(device).float()
+            datas = tensor['data'].to(device)
+            labels = tensor['label'].to(device)
             
-            pred = model(images, infos)
+            pred = model(images, datas)
             loss = criterion(pred, labels)
 
             loss.backward()
@@ -103,6 +102,9 @@ if __name__ == '__main__':
             optimizer.zero_grad()
 
             train_loss.append(loss.item())
+            logging.debug(f"Step {step_index} loss : {loss.item()}")
+
+        logging.info(f"Epoch {epoch} loss : {sum(train_loss)/len(train_loss)}")
 
 
         model.eval()
@@ -113,17 +115,15 @@ if __name__ == '__main__':
         with torch.no_grad():
             for batch, tensor in enumerate(tqdm(val_loader)):
                 images = tensor['image'].to(device)
-                infos = torch.stack(tensor['info'], dim = 1)
-                infos = infos.to(device).float()
-                labels = torch.stack(tensor['label'], dim = 1)
-                labels = labels.to(device).float()
+                datas = tensor['data'].to(device)                
+                labels = tensor['label'].to(device)
                 total += len(images)
 
-                outputs = model(images, infos)
+                outputs = model(images, datas)
                 val_score = evaluate(outputs, labels)
         
         if not os.path.exists(f"./save/{args.model}_{args.epoch}_{args.batch}_{args.learning_rate}"):
             os.mkdir(f"./save/{args.model}_{args.epoch}_{args.batch}_{args.learning_rate}")
 
         torch.save(model.state_dict(),
-                   f"./save/{args.model}_{args.epoch}_{args.batch}_{args.learning_rate}/{epoch}_score:{round(val_score,3)}.pth")
+                   f"./save/{args.model}_{args.epoch}_{args.batch}_{args.learning_rate}/{epoch}_score:{val_score}.pth")
