@@ -1,65 +1,89 @@
 import os
-import csv
 import torch
 import pandas as pd
 from PIL import Image
+import warnings
+warnings.filterwarnings('ignore')
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms as T
+from preprocess import NumericPreprocessor
 
 class PlantDataset(Dataset):
-    def __init__(
-        self, 
-        root: str, 
-        split: str,
-        transforms=None
-    ):
+    def __init__(self, root, mode, transforms=None):
+
+        """
+        식물 데이터를 위한 커스텀 데이터셋 클래스.
+
+        Parameters:
+        - root: 루트 디렉토리. 누군가가 깃허브를 조져놓지 않는 이상 ./dataset으로 사용하면 됩니다.
+        - mode: "train" / "test"
+        - transforms: 이미지 변환 옵션. main에서 알아서 구현해서 쓰세요.
+
+        Variables:
+        - totensor: 이미지 텐서 변환용.
+        - train_data: 훈련 데이터프레임.
+        - test_data: 테스트 데이터프테임.
+        - processor: NumericPreprocessor
+        - items: 전처리후 NumericPreprocessor가 내뱉는 딕셔너리.
+        - image: items 내부의 이미지 패스.
+        - data: items 내부의 식물 보조 데이터.
+        - label: items 내부의 라벨 데이터.
+
+        Information:
+        PCA 가중치 공유를 위해서 NumericPreprocessor가 train, test 데이터를 전부 필요로 한다.
+        그래서 데이터셋 클래스도 test, train 전부 함께 넣어주고 모드를 따로 설정해줘야 한다는 점...
+        좀 불편해도 이 방식이 그나마 제일 편한거니까 다들 참고하도록. 참으라고 ^^
+        """
+
         self.root = root
+        self.mode = mode
         self.transforms = transforms
-        self.split = split
         self.totensor = T.ToTensor()
-        self.data = self.prepare_dataset()
-    
+        self.train_data = pd.read_csv(os.path.join(root, "train/train.csv"))
+        self.test_data = pd.read_csv(os.path.join(root, "test/test.csv"))
+        self.processor = NumericPreprocessor(root=self.root, train_data=self.train_data, test_data=self.test_data, mode=self.mode)
+        self.items = self.processor.preprocess()
+        self.image = self.items["image"]
+        self.data = self.items["data"]
+        self.label = self.items["label"]
+
     def __len__(self):
-        return len(self.data)
+
+        """
+        Returns the length of the dataset.
+
+        Returns:
+        - Length of the dataset based on the mode (train or test).
+        """
+
+        if self.mode == "train":
+            return len(self.train_data)
+        else:
+            return len(self.test_data)
     
     def __getitem__(self, index):
-        ## 이미지 텐서로 변환 후 리턴
-        image = Image.open(self.data[index][0])
+
+        """
+        Fetches an item from the dataset.
+
+        Parameters:
+        - index: Index of the item to retrieve.
+
+        Returns:
+        - Dictionary containing image, data, and optionally label.
+        """
+
+        data = torch.tensor(self.data.iloc[index,:], dtype=torch.float32)
+        
+        image = Image.open(self.image[index])
         if self.transforms:
             image = self.transforms(image)
         else:
             image = self.totensor(image)
-        ## 식물에 대한 지리적 정보
-        info = self.data[index][1]
-        ## 식물 특성값
-        label = self.data[index][2]
-        return {
-            'image': image,
-            'info': info,
-            'label': label 
-        }
-    
-    def prepare_dataset(self):
-        ## root는 "./dataset", split은 "test", "train"으로 지정.
-        split_base = os.path.join(self.root, self.split)
-        ## 이미지 이름 순으로 정렬한 리스트
-        image_path = os.path.join(split_base, "image")
-        images = sorted(os.listdir(image_path))
-        ## csv 파일에서 훈련에 사용할 정보와 타겟값들 불러오기
-        csv = pd.read_csv(os.path.join(split_base, "info.csv"))
-        ## 이미지 이름과 순서 맞추기 위해 id 순으로 정렬
-        csv = csv.sort_values(by="id")
-        ## 타겟 값에 대한 표준편차 열 제거.
-        csv.drop(columns=["X4_sd","X11_sd","X18_sd","X26_sd","X50_sd","X3112_sd"], inplace=True)
-        ## csv 데이터프레임에서 정보와 라벨 분리.
-        label_col = ["X4_mean","X11_mean","X18_mean","X26_mean","X50_mean","X3112_mean"]
-        info_col = [column for column in csv.columns if column not in label_col]
-        ## 데이터 저장할 빈 리스트 생성.
-        data = []
-        ## [이미지 경로, 정보, 라벨]
-        for idx, image_name in enumerate(images):
-            data.append([os.path.join(image_path, image_name),
-                         list(csv[info_col].iloc[idx]),
-                         list(csv[label_col].iloc[idx])])
-        return data
+
+        if self.mode == "train":
+            label = torch.tensor(self.label.iloc[index,:], dtype=torch.float32)
+            return {'image': image, 'data': data, 'label': label}
+        
+        return {'image': image, 'data': data}
