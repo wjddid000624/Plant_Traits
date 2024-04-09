@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import logging
 import argparse
@@ -8,6 +9,7 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader
 from sklearn.metrics import r2_score
 
+sys.path.append('../models')
 from model_efficientnet import EfficientPlant
 from dataset import PlantDataset
 
@@ -45,8 +47,8 @@ if __name__ == '__main__':
                                       ])}
     
     ## Train, Val 스플릿이 제공되지 않아서 같은 데이터셋을 불러온 뒤, transforms만 따로 정의.
-    train_dataset = PlantDataset("./dataset", "train", transforms=transforms["train"])
-    val_dataset = PlantDataset("./dataset", "train", transforms=transforms["val"])
+    train_dataset = PlantDataset("../dataset", "train", transforms=transforms["train"])
+    val_dataset = PlantDataset("../dataset", "train", transforms=transforms["val"])
 
     ## validation set의 사이즈는 전체 데이터셋의 0.2로 맞춰준다.
     indices = range(len(train_dataset))
